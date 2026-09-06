@@ -1,0 +1,100 @@
+# Deep Work
+
+A focus timer that is honest about what it can and cannot do.
+
+You name the assignment, say how long you think the work needs, set a session
+length, and start the clock. The phone shows one screen: the task and a
+countdown. Afterwards it tells you the thing nobody tracks — how long that
+"twenty minute" assignment actually took.
+
+## The blocking problem, stated plainly
+
+**No web app can block apps on an iPhone.** Neither can a native app, unless
+Apple grants it the `com.apple.developer.family-controls` entitlement, which
+needs a Mac, a paid developer account and Apple's approval — and even then a
+user can revoke it from Settings in one tap.
+
+So this app does not pretend to block your phone. It uses the one thing on iOS
+that genuinely cannot be escaped:
+
+> **Guided Access** — Settings › Accessibility › Guided Access. Turn it on, set
+> a passcode. Then triple-click the side button inside any app and iOS locks the
+> phone to that app until the passcode is entered.
+
+Start a session, triple-click, and the phone *is* the countdown until the time
+is up. That is the whole design: this app is the thing you get locked into.
+
+Guided Access also has its own time limit (Options › Time Limit) if you would
+rather it end the lock for you.
+
+## The laptop half
+
+`focus.py` blocks distracting sites on the laptop for the length of a session,
+because there the blocking can be real.
+
+    ./focus.py start "Controls lab 2" 45 --est 20 --course "EEL 4657C"
+    ./focus.py stop                # end early, unblock
+    ./focus.py status
+    ./focus.py stats
+    ./focus.py serve               # serve the app on the LAN + accept the phone's sessions
+
+Blocking rewrites the Windows hosts file, which needs Administrator, so one
+elevated helper is launched per session. It restores the file when the clock
+runs out, or sooner if `focus stop` drops the stop flag — **one UAC prompt per
+session, not two**. Edit `blocklist.txt` to taste; `www.` and `m.` variants are
+added for you.
+
+If the laptop is killed mid-session the helper still restores the hosts file on
+its own deadline, so you cannot be left permanently blocked.
+
+## Sharing one log
+
+Both halves write the same session shape. Run `focus serve` on the laptop, paste
+the printed address into the phone's Stats tab, and the phone uploads any
+sessions the laptop has not seen whenever it can reach it. Deduplicated by id,
+so uploading twice is harmless. Everything works fully offline without it — the
+sync is a convenience, never a dependency.
+
+## What it measures
+
+- **Streak** of completed sessions. Ending early breaks it — unless you ended
+  early because you *finished*, which is a win and is treated as one.
+- **Why you stopped**, from a one-tap list. The point is to find out whether it
+  is really the phone, or being stuck, or being tired.
+- **Estimate against actual**, per assignment and as a single multiplier. If you
+  say twenty minutes and it takes an hour, that ratio is the number worth knowing.
+- **How many times you left the app** mid-session, from the page visibility API.
+  Honest accountability for the sessions you run without Guided Access — and
+  impossible to trigger during one, which is rather the point.
+
+## Storage
+
+Everything is in the phone's `localStorage` (`fx.sessions`, `fx.tasks`, `fx.cfg`,
+`fx.live`) and, on the laptop, `state/sessions.json`. A session in progress
+survives a reload, a crash or the battery dying: reopen and it either resumes or
+is credited in full if the clock already ran out.
+
+Fonts are self-hosted and the service worker caches the shell, so the app opens
+with no network at all.
+
+## Breaks
+
+A break is offered after every session, but only with a length attached. It runs
+on the same locked screen, so staying in Guided Access through the break is the
+whole idea — the break cannot quietly become an hour of scrolling. When it ends
+it rings, and the screen that replaces it does not go away on its own: it says
+how far past the end you are and offers exactly two answers, back to work or
+hold to stop for the day. If the phone was in your pocket when the break ran
+out, the overrun is measured from when it *should* have ended, so Stats can tell
+you the true length of your five minute breaks.
+
+## youtube-blinders/
+
+An unpacked Chrome extension that leaves YouTube with a search bar and a player.
+Hidden: the home feed (replaced with a full stop), the recommendation sidebar,
+end screens and cards, Shorts, comments, the left rail, notifications. Each is a
+separate toggle in the popup, and turning it off restores YouTube instantly with
+no reload.
+
+Install: `chrome://extensions` › Developer mode › **Load unpacked** ›
+pick `youtube-blinders/`.

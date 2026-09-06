@@ -1,0 +1,28 @@
+<meta charset="utf-8">
+<title>YouTube Blinders</title>
+<style>
+  body{width:250px;margin:0;padding:14px;background:#fff;color:#0f0f0f;
+    font:14px/1.45 Roboto,"Segoe UI",system-ui,sans-serif}
+  @media (prefers-color-scheme:dark){body{background:#181818;color:#f1f1f1}}
+  h1{margin:0 0 2px;font-size:15px;font-weight:500}
+  p.s{margin:0 0 12px;font-size:12px;opacity:.6}
+  label{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:13.5px;cursor:pointer}
+  label.main{font-weight:500;font-size:14px;padding-bottom:10px;margin-bottom:4px;
+    border-bottom:1px solid rgba(128,128,128,.25)}
+  input{width:16px;height:16px;accent-color:#c00;margin:0}
+  .sub{opacity:.9}
+  .sub.off{opacity:.35;pointer-events:none}
+</style>
+<h1>YouTube Blinders</h1>
+<p class="s">A search bar and a player. Nothing else.</p>
+<label class="main"><input type="checkbox" id="on"><span>Blinders on</span></label>
+<div id="subs">
+  <label class="sub"><input type="checkbox" id="home"><span>Hide the home feed</span></label>
+  <label class="sub"><input type="checkbox" id="side"><span>Hide recommendations beside videos</span></label>
+  <label class="sub"><input type="checkbox" id="end"><span>Hide end screens and cards</span></label>
+  <label class="sub"><input type="checkbox" id="shorts"><span>Hide Shorts</span></label>
+  <label class="sub"><input type="checkbox" id="comments"><span>Hide comments</span></label>
+  <label class="sub"><input type="checkbox" id="nav"><span>Hide the left sidebar</span></label>
+  <label class="sub"><input type="checkbox" id="chrome"><span>Hide notifications</span></label>
+</div>
+<script src="popup.js"></script>

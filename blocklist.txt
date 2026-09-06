@@ -1,0 +1,27 @@
+# One domain per line. www. and m. variants are added automatically.
+# Lines starting with # are ignored. Edit freely.
+youtube.com
+reddit.com
+instagram.com
+tiktok.com
+x.com
+twitter.com
+facebook.com
+snapchat.com
+twitch.tv
+netflix.com
+hulu.com
+disneyplus.com
+primevideo.com
+espn.com
+news.ycombinator.com
+9gag.com
+imgur.com
+pinterest.com
+tumblr.com
+discord.com
+messenger.com
+linkedin.com
+amazon.com
+ebay.com
+buzzfeed.com

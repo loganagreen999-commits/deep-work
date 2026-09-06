@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Blinders",
+  "version": "1.0.0",
+  "description": "Leaves YouTube with a search bar and a player. No home feed, no sidebar, no Shorts, no end screens, no comments.",
+  "icons": { "48": "icon-48.png", "128": "icon-128.png" },
+  "permissions": ["storage"],
+  "action": { "default_popup": "popup.html", "default_title": "YouTube Blinders" },
+  "content_scripts": [{
+    "matches": ["*://*.youtube.com/*"],
+    "css": ["blinders.css"],
+    "js": ["blinders.js"],
+    "run_at": "document_start",
+    "all_frames": false
+  }]
+}

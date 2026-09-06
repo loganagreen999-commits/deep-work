@@ -1,0 +1,55 @@
+/* Everything here is gated on <html> carrying a data-blinders flag, so toggling
+   the extension off in the popup restores YouTube instantly with no reload. */
+
+/* ---- the home feed. The page still loads; it just does not get to show you. ---- */
+html[data-blinders-home="1"] ytd-browse[page-subtype="home"] #contents,
+html[data-blinders-home="1"] ytd-browse[page-subtype="home"] ytd-rich-grid-renderer,
+html[data-blinders-home="1"] ytd-browse[page-subtype="trending"] #contents,
+html[data-blinders-home="1"] ytd-rich-section-renderer { display: none !important; }
+
+/* ---- recommendations beside a video, the real rabbit hole ---- */
+html[data-blinders-side="1"] #secondary,
+html[data-blinders-side="1"] #related,
+html[data-blinders-side="1"] ytd-watch-next-secondary-results-renderer { display: none !important; }
+/* let the player take the space the sidebar was using */
+html[data-blinders-side="1"] #primary.ytd-watch-flexy { max-width: none !important; }
+html[data-blinders-side="1"] ytd-watch-flexy[flexy] #columns { max-width: 100% !important; }
+
+/* ---- end screens and the cards that appear over the last seconds ---- */
+html[data-blinders-end="1"] .ytp-endscreen-content,
+html[data-blinders-end="1"] .ytp-ce-element,
+html[data-blinders-end="1"] .ytp-cards-teaser,
+html[data-blinders-end="1"] .ytp-pause-overlay,
+html[data-blinders-end="1"] .ytp-suggestion-set { display: none !important; }
+
+/* ---- Shorts, everywhere they appear ---- */
+html[data-blinders-shorts="1"] ytd-reel-shelf-renderer,
+html[data-blinders-shorts="1"] ytd-rich-shelf-renderer[is-shorts],
+html[data-blinders-shorts="1"] ytd-guide-entry-renderer a[title="Shorts"],
+html[data-blinders-shorts="1"] ytd-mini-guide-entry-renderer a[title="Shorts"],
+html[data-blinders-shorts="1"] [is-shorts] { display: none !important; }
+
+/* ---- comments ---- */
+html[data-blinders-comments="1"] #comments,
+html[data-blinders-comments="1"] ytd-comments { display: none !important; }
+
+/* ---- the left rail, which is a list of places to wander off to ---- */
+html[data-blinders-nav="1"] #guide,
+html[data-blinders-nav="1"] tp-yt-app-drawer#guide,
+html[data-blinders-nav="1"] ytd-mini-guide-renderer,
+html[data-blinders-nav="1"] #guide-button { display: none !important; }
+html[data-blinders-nav="1"] ytd-page-manager { margin-left: 0 !important; }
+
+/* ---- notifications and the avatar menu, both of which lead outward ---- */
+html[data-blinders-chrome="1"] ytd-notification-topbar-button-renderer,
+html[data-blinders-chrome="1"] #voice-search-button { display: none !important; }
+
+/* what stands in for the home feed */
+#blinders-blank{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:62vh; padding:40px 24px; text-align:center;
+  font-family:Roboto,"Segoe UI",system-ui,sans-serif;
+}
+#blinders-blank h2{ margin:0 0 8px; font-size:20px; font-weight:500; color:var(--yt-spec-text-primary,#0f0f0f) }
+#blinders-blank p{ margin:0; font-size:14px; color:var(--yt-spec-text-secondary,#606060); max-width:44ch; line-height:1.6 }
+#blinders-blank .k{ margin-top:18px; font-size:13px; color:var(--yt-spec-text-secondary,#909090) }

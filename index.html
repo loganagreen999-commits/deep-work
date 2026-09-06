@@ -1,0 +1,815 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Deep Work</title>
+<meta name="description" content="Name the assignment, set the clock, lock the phone to it. Then find out where the time actually went.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" media="(prefers-color-scheme:light)" content="#F5F4F1">
+<meta name="theme-color" media="(prefers-color-scheme:dark)" content="#111211">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Deep Work">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+@font-face{font-family:"Fraunces";src:url("fonts/Fraunces-400.woff2")format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"IBM Plex Sans";src:url("fonts/IBMPlexSans-400.woff2")format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("fonts/IBMPlexMono-400.woff2")format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("fonts/IBMPlexMono-500.woff2")format("woff2");font-weight:500;font-display:swap}
+
+:root{
+  --bg:#F5F4F1; --surface:#FFFFFF; --surface-2:#EFEEE9; --sunk:#E7E5DE;
+  --ink:#1B1C18; --ink-2:#585A51; --ink-3:#8A8C81;
+  --line:#DEDCD4; --line-soft:#EBE9E2;
+  --accent:#3E4C8A; --accent-ink:#38467F; --accent-soft:#E6E9F5;
+  --ok:#2F7A55; --ok-soft:#E3F0E9;
+  --warn:#B4472F; --warn-soft:#F7E7E2;
+  --on-accent:#FFFFFF;
+  --r:16px; --shadow:0 1px 2px rgba(20,22,18,.05),0 6px 18px -12px rgba(20,22,18,.22);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111211; --surface:#1A1B19; --surface-2:#212320; --sunk:#0C0D0C;
+  --ink:#ECEBE5; --ink-2:#A6A79E; --ink-3:#767871;
+  --line:#2C2E2A; --line-soft:#232522;
+  --accent:#8E9CDC; --accent-ink:#A3B0E6; --accent-soft:#1E2340;
+  --ok:#6FC79A; --ok-soft:#16291F; --warn:#E28A72; --warn-soft:#2E1D18;
+  --on-accent:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --bg:#111211; --surface:#1A1B19; --surface-2:#212320; --sunk:#0C0D0C;
+  --ink:#ECEBE5; --ink-2:#A6A79E; --ink-3:#767871;
+  --line:#2C2E2A; --line-soft:#232522;
+  --accent:#8E9CDC; --accent-ink:#A3B0E6; --accent-soft:#1E2340;
+  --ok:#6FC79A; --ok-soft:#16291F; --warn:#E28A72; --warn-soft:#2E1D18;
+  --on-accent:#12141A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;
+  padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+button,input,select,textarea,label,a,[role="tab"]{touch-action:manipulation}
+button{-webkit-tap-highlight-color:transparent}
+input,select,textarea{font-size:16px}          /* under 16px makes iOS zoom on focus */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+#screen{max-width:520px;margin:0 auto;padding:18px 16px 8px}
+.head{margin:6px 3px 18px}
+.head h1{margin:0;font-family:"Fraunces",Georgia,serif;font-size:26px;font-weight:600;letter-spacing:-.02em}
+.head p{margin:3px 0 0;font-size:13px;color:var(--ink-2)}
+
+.card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.lab{display:block;font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 6px}
+.sectlab{font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);
+  padding:16px 3px 7px;display:flex;justify-content:space-between;align-items:center}
+input[type=text],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);
+  border-radius:10px;padding:12px;outline:none}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips button{padding:9px 14px;border-radius:99px;background:var(--sunk);color:var(--ink-2);
+  font-size:13.5px;font-weight:500;border:1px solid transparent}
+.chips button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink);
+  border-color:var(--accent);font-weight:600}
+.chips button:active{transform:scale(.97)}
+
+.btn{width:100%;padding:16px;border-radius:13px;background:var(--accent);color:var(--on-accent);
+  font-size:16px;font-weight:600;letter-spacing:.01em}
+.btn:active{transform:scale(.985)}
+.btn.ghost{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.btn.warn{background:var(--warn-soft);color:var(--warn)}
+.btn[disabled]{opacity:.45}
+.note{font-size:12px;color:var(--ink-3);line-height:1.6;margin:9px 3px 0}
+
+/* ---- the run screen: dark, still, nothing to poke at ---- */
+.run{position:fixed;inset:0;z-index:60;background:#0B0C0A;color:#F0EFE9;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:26px calc(22px + env(safe-area-inset-left)) calc(26px + env(safe-area-inset-bottom));
+  text-align:center}
+.run .task{font-family:"Fraunces",Georgia,serif;font-size:24px;font-weight:600;letter-spacing:-.01em;
+  max-width:15ch;line-height:1.25;margin:0 0 6px}
+.run .course{font-size:12.5px;color:#7E8078;letter-spacing:.08em;text-transform:uppercase;margin:0 0 30px}
+.clock{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+  font-size:clamp(56px,20vw,86px);font-weight:500;line-height:1;letter-spacing:-.03em;margin:0}
+.clock.low{color:#E8A87C}
+.ring{width:190px;height:190px;margin:16px 0 22px;position:relative}
+.ring svg{transform:rotate(-90deg);width:100%;height:100%}
+.ring circle{fill:none;stroke-width:5;stroke-linecap:round}
+.ring .bg{stroke:#22241F}
+.ring .fg{stroke:#8E9CDC;transition:stroke-dashoffset 1s linear}
+.ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.run .est{font-size:12.5px;color:#8A8C83;margin:0}
+.run.brk .ring .fg{stroke:#7FC0A0}
+.run.brk .clock{color:#CFE8DA}
+.run.resume{justify-content:center}
+.run.resume .bigmsg{font-family:"Fraunces",Georgia,serif;font-size:44px;font-weight:600;
+  letter-spacing:-.03em;margin:18px 0 8px;color:#E8A87C}
+.run.resume .foot{position:static;margin-top:34px;width:100%;max-width:340px}
+.run.resume .btn{background:#8E9CDC;color:#12141A}
+.pill.brk{background:var(--sunk);color:var(--ink-3)}
+.chips button[aria-pressed="false"]{opacity:.55}
+.run .leaves{font-size:12.5px;color:#E8A87C;margin:8px 0 0;min-height:18px}
+.run .foot{position:absolute;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;align-items:center;gap:12px;padding:0 22px}
+.hold{position:relative;overflow:hidden;padding:12px 22px;border-radius:99px;
+  background:#1A1B18;color:#8A8C83;font-size:13px;font-weight:500;border:1px solid #26282300}
+.hold i{position:absolute;left:0;top:0;bottom:0;width:0%;background:#2A2C26;z-index:0}
+.hold span{position:relative;z-index:1}
+.ga{font-size:12px;color:#63655D;line-height:1.55;max-width:32ch}
+
+/* ---- log ---- */
+.row{display:flex;align-items:center;gap:12px;padding:13px 3px;border-bottom:1px solid var(--line-soft)}
+.row:last-child{border-bottom:0}
+.row .main{flex:1;min-width:0}
+.row .nm{font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.row .rt{text-align:right;flex-shrink:0}
+.row .mins{font-family:"IBM Plex Mono",monospace;font-size:15px;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 6px;border-radius:5px;margin-left:6px;vertical-align:1px}
+.pill.done{background:var(--ok-soft);color:var(--ok)}
+.pill.bail{background:var(--warn-soft);color:var(--warn)}
+.daylab{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+  padding:16px 3px 4px}
+
+/* ---- stats ---- */
+.big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:15px}
+.stat .v{font-family:"Fraunces",Georgia,serif;font-size:30px;font-weight:600;line-height:1;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat .k{font-size:11.5px;color:var(--ink-3);margin-top:5px}
+.mult{font-family:"Fraunces",Georgia,serif;font-size:40px;font-weight:600;letter-spacing:-.03em;
+  line-height:1;font-variant-numeric:tabular-nums}
+.bars{margin-top:4px}
+.bar{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;
+  border-bottom:1px solid var(--line-soft);font-size:13.5px}
+.bar:last-child{border-bottom:0}
+.bar .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .n{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tr{grid-column:1/-1;height:5px;border-radius:99px;background:var(--sunk);overflow:hidden;margin-top:2px}
+.tr i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.tr i.over{background:var(--warn)}
+.spark{display:flex;align-items:flex-end;gap:4px;height:64px;margin:6px 0 2px}
+.spark i{flex:1;background:var(--accent-soft);border-radius:3px 3px 0 0;min-height:2px;position:relative}
+.spark i.has{background:var(--accent)}
+.sparkx{display:flex;gap:4px;font-size:9.5px;color:var(--ink-3)}
+.sparkx span{flex:1;text-align:center}
+
+/* ---- tabbar ---- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--surface);
+  border-top:1px solid var(--line);padding:7px 12px calc(7px + env(safe-area-inset-bottom))}
+.tabbar>div{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;
+  border-radius:10px;font-size:10.5px;font-weight:600;color:var(--ink-3)}
+.tabbar svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-current="true"]{color:var(--accent-ink)}
+.tabbar button[aria-current="true"] svg{stroke-width:2.3}
+
+/* ---- sheet ---- */
+.scrim{position:fixed;inset:0;background:rgba(8,10,7,.5);z-index:70;backdrop-filter:blur(2px)}
+.sheet{position:fixed;left:0;right:0;bottom:var(--kb,0px);z-index:71;background:var(--bg);
+  border-radius:20px 20px 0 0;max-height:var(--sheetmax,92vh);display:flex;flex-direction:column;
+  box-shadow:0 -8px 40px -10px rgba(0,0,0,.45);animation:up .24s cubic-bezier(.2,.8,.3,1)}
+@keyframes up{from{transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet .in{max-width:520px;margin:0 auto;width:100%;padding:8px 16px calc(20px + env(safe-area-inset-bottom));
+  overflow-y:auto;overscroll-behavior:contain}
+.grab{width:36px;height:4px;border-radius:99px;background:var(--line);margin:9px auto 6px}
+.sheet h3{margin:6px 3px 4px;font-family:"Fraunces",Georgia,serif;font-size:19px;font-weight:600}
+.sheet p.s{margin:0 3px 14px;font-size:13px;color:var(--ink-2);line-height:1.5}
+
+.empty{text-align:center;color:var(--ink-3);font-size:13.5px;padding:40px 24px;line-height:1.65}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom));
+  z-index:80;background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:11px;
+  font-size:13.5px;font-weight:500;box-shadow:0 8px 26px -8px rgba(0,0,0,.5);animation:up .2s}
+</style>
+
+<div id="screen"></div>
+<nav class="tabbar" id="tabbar"><div>
+  <button id="navfocus"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Focus</button>
+  <button id="navlog"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Log</button>
+  <button id="navstats"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Stats</button>
+</div></nav>
+<div id="runHost"></div>
+<div id="sheetHost"></div>
+<div id="toastHost"></div>
+<script>
+/* ================= state ================= */
+const LSK={sessions:"fx.sessions",tasks:"fx.tasks",cfg:"fx.cfg",live:"fx.live",pending:"fx.pending"};
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+const S={
+  view:"focus",
+  sessions:lsGet(LSK.sessions,[]),      /* finished ones, newest last */
+  tasks:lsGet(LSK.tasks,{}),            /* name -> {est,spent,sessions,done} */
+  cfg:Object.assign({dur:45,est:20,brk:5,sawGA:false,sync:""},lsGet(LSK.cfg,{})),
+  live:lsGet(LSK.live,null),            /* a session in progress, survives a reload */
+  pending:lsGet(LSK.pending,null)       /* a finished break waiting to be answered */
+};
+const saveS=()=>lsSet(LSK.sessions,S.sessions);
+const saveT=()=>lsSet(LSK.tasks,S.tasks);
+const saveC=()=>lsSet(LSK.cfg,S.cfg);
+const saveL=()=>{S.live?lsSet(LSK.live,S.live):localStorage.removeItem(LSK.live)};
+const saveP=()=>{S.pending?lsSet(LSK.pending,S.pending):localStorage.removeItem(LSK.pending)};
+
+/* ================= util ================= */
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const clock=ms=>{const s=Math.max(0,Math.round(ms/1000));
+  const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
+  return h?h+":"+pad(m)+":"+pad(x):m+":"+pad(x)};
+const mins=ms=>Math.round(ms/60000);
+const dkey=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today=()=>dkey(new Date());
+const keyOf=n=>String(n||"").trim().toLowerCase();
+function toast(t){
+  const h=document.getElementById("toastHost");
+  h.innerHTML='<div class="toast">'+esc(t)+"</div>";
+  clearTimeout(toast.t); toast.t=setTimeout(()=>h.innerHTML="",2600);
+}
+const REASONS=[["phone","My phone"],["stuck","Got stuck"],["tired","Ran out of steam"],
+  ["interrupt","Someone interrupted"],["early","Finished early"],["other","Something else"]];
+const REASON_LABEL=c=>(REASONS.find(r=>r[0]===c)||[,"Unknown"])[1];
+/* finishing early is a win, not a lapse — it must not cost the streak */
+const isLapse=s=>s.kind!=="break"&&s.ended==="bail"&&s.reason!=="early";
+const isWork=s=>s.kind!=="break";
+const works=()=>S.sessions.filter(isWork);
+const breaks=()=>S.sessions.filter(s=>s.kind==="break");
+
+/* streak = consecutive completed sessions, newest backwards */
+function streak(){
+  const w=works(); let n=0;
+  for(let i=w.length-1;i>=0;i--){ if(isLapse(w[i]))break; n++ }
+  return n;
+}
+function bestStreak(){
+  let best=0,n=0;
+  for(const s of works()){ if(isLapse(s)){best=Math.max(best,n);n=0} else n++ }
+  return Math.max(best,n);
+}
+/* how far past their length the breaks actually run */
+function breakDrift(){
+  const b=breaks().filter(x=>x.overrun!=null);
+  if(!b.length)return null;
+  const planned=b.reduce((a,x)=>a+x.planned,0);
+  const over=b.reduce((a,x)=>a+x.overrun,0);
+  return {n:b.length,planned:planned,over:over,avg:over/b.length,
+          real:(planned+over)/b.length,ratio:planned>0?(planned+over)/planned:0};
+}
+/* how much longer things really take than you think */
+function multiplier(){
+  let est=0,act=0;
+  for(const t of Object.values(S.tasks))
+    if(t.done&&t.est>0&&t.spent>0){est+=t.est;act+=t.spent}
+  return est>0?act/est:0;
+}
+
+/* ================= sync (optional, laptop on the same wifi) ================= */
+async function syncUp(){
+  const base=(S.cfg.sync||"").replace(/\/+$/,"");
+  if(!base)return;
+  try{
+    const r=await fetch(base+"/api/sessions",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({sessions:S.sessions})});
+    if(r.ok){const j=await r.json(); if(j&&j.added!=null)return j.added}
+  }catch(e){}
+  return null;
+}
+</script>
+<script>
+/* ================= the session ================= */
+let tick=null, wakeLock=null, actx=null;
+
+function audioReady(){                 /* must be called from a real tap */
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==="suspended")actx.resume();
+  }catch(e){actx=null}
+}
+function alarm(times){
+  try{
+    if(!actx)return;
+    for(let i=0;i<(times||3);i++){
+      const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime+i*0.45;
+      o.type="sine"; o.frequency.setValueAtTime(i%2?784:588,t);
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(.35,t+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+.36);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+.4);
+    }
+  }catch(e){}
+  try{ if(navigator.vibrate)navigator.vibrate([180,90,180,90,260]) }catch(e){}
+}
+
+async function keepAwake(on){
+  try{
+    if(on){ if("wakeLock" in navigator && !wakeLock) wakeLock=await navigator.wakeLock.request("screen") }
+    else if(wakeLock){ await wakeLock.release(); wakeLock=null }
+  }catch(e){ wakeLock=null }
+}
+document.addEventListener("visibilitychange",()=>{
+  if(!S.live)return;
+  if(document.hidden){
+    S.live.leftAt=Date.now();
+  }else{
+    if(S.live.leftAt){
+      const away=Date.now()-S.live.leftAt;
+      if(away>1200){ S.live.leaves.push(Math.round(away/1000)); }  /* ignore a flicker */
+      S.live.leftAt=0;
+    }
+    keepAwake(true);
+  }
+  saveL();
+});
+
+function startSession(task,course,durMin,estMin){
+  S.pending=null; saveP();
+  S.live={id:uid(),kind:"work",task:task,course:course||"",start:Date.now(),
+          dur:durMin*60000,est:estMin,leaves:[],leftAt:0};
+  const k=keyOf(task);
+  if(!S.tasks[k])S.tasks[k]={name:task,course:course||"",est:estMin,spent:0,sessions:0,done:false};
+  saveL(); saveT();
+  keepAwake(true);
+  renderRun();
+}
+function finishSession(how,reason){
+  if(!S.live)return;
+  const l=S.live, worked=Math.min(Date.now()-l.start,l.dur);
+  const rec={id:l.id,kind:l.kind||"work",task:l.task,course:l.course,at:l.start,
+    planned:mins(l.dur),actual:mins(worked),est:l.est,
+    ended:how,reason:reason||"",leaves:l.leaves.length,
+    awaySec:l.leaves.reduce((a,b)=>a+b,0)};
+  if(l.kind!=="break"){
+    const k=keyOf(l.task), t=S.tasks[k];
+    if(t){ t.spent+=rec.actual; t.sessions++; }
+  }
+  S.sessions.push(rec);
+  S.live=null;
+  saveS(); saveT(); saveL();
+  clearInterval(tick); tick=null;
+  document.getElementById("runHost").innerHTML="";
+  syncUp();
+  if(l.kind==="break"){ keepAwake(false); breakOver(rec,l); return }
+  keepAwake(false);
+  askOutcome(rec);
+}
+
+/* ---- breaks ----
+   A break runs on the same locked screen, so it cannot quietly become an hour
+   of scrolling. When it ends it does not just stop: it demands an answer, and
+   the default answer is back to work. */
+function startBreak(minutes,task,course,est){
+  audioReady();
+  S.pending=null; saveP();
+  S.live={id:uid(),kind:"break",task:task,course:course||"",start:Date.now(),
+          dur:minutes*60000,est:est||0,leaves:[],leftAt:0};
+  saveL(); keepAwake(true); renderRun();
+}
+/* the break's clock ran out: hold the user to the return */
+function breakOver(rec,live){
+  alarm(3);
+  S.pending={task:live.task,course:live.course,est:live.est,
+             dur:S.cfg.dur,brk:rec.planned,endedAt:Date.now(),recId:rec.id};
+  saveP();
+  renderResume();
+}
+/* how long past the end of the break they actually came back */
+function closePending(startNow){
+  const p=S.pending; if(!p)return;
+  const over=Math.max(0,Math.round((Date.now()-p.endedAt)/60000));
+  const rec=S.sessions.find(x=>x.id===p.recId);
+  if(rec){ rec.overrun=over; saveS() }
+  S.pending=null; saveP();
+  document.getElementById("runHost").innerHTML="";
+  if(startNow){ startSession(p.task,p.course,p.dur,p.est) }
+  else { S.view="focus"; render();
+         toast(over>0?"Break ran "+over+" min over":"Stopped for now") }
+}
+
+/* after the clock stops: did the assignment actually get done? */
+function askOutcome(rec){
+  const t=S.tasks[keyOf(rec.task)]||{est:rec.est,spent:rec.actual};
+  openSheet(rec.ended==="done"?"Time's up":"Session ended",
+    '<p class="s">'+esc(rec.task)+" &middot; "+rec.actual+" min"+
+      (rec.ended==="bail"?" of "+rec.planned+", ended early":"")+"</p>"+
+    '<div class="card"><span class="lab">Is this assignment finished?</span>'+
+      '<div class="chips" id="finChips"><button data-fin="1">Yes, it is done</button>'+
+      '<button data-fin="0">No, more to do</button></div>'+
+      '<p class="note">Time on this assignment so far: <b>'+t.spent+' min</b>'+
+      (t.est?', against the '+t.est+' min you guessed':"")+".</p></div>"+
+    '<div class="card"><span class="lab">Break</span>'+
+      '<div class="chips" id="brkChips">'+
+        [5,10,15].map(m=>'<button data-brk="'+m+'">'+m+" min</button>").join("")+
+        '<button data-brk="0">No break</button></div>'+
+      '<p class="note">The break runs on the same locked screen and rings when it is up, so it '+
+      "cannot quietly become an hour. Answer the question above first.</p></div>",
+    el=>{
+      let answered=false;
+      const k=keyOf(rec.task);
+      el.querySelectorAll("[data-fin]").forEach(b=>b.onclick=()=>{
+        answered=true;
+        const done=b.dataset.fin==="1";
+        if(S.tasks[k]){S.tasks[k].done=done;saveT()}
+        el.querySelectorAll("[data-fin]").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+        if(done){
+          const tt=S.tasks[k];
+          if(tt&&tt.est>0&&tt.spent>0){
+            const r=tt.spent/tt.est;
+            toast(r>1.35?"Took "+r.toFixed(1)+"x your estimate":"Close to your estimate — nice");
+          }else toast("Marked done");
+        }
+      });
+      el.querySelectorAll("[data-brk]").forEach(b=>b.onclick=()=>{
+        if(!answered){toast("Answer the question above first");return}
+        const m=+b.dataset.brk;
+        closeSheet();
+        if(m>0){S.cfg.brk=m;saveC();startBreak(m,rec.task,rec.course,rec.est)}
+        else{S.view="focus";render();toast("Straight on then")}
+      });
+    });
+}
+
+/* ================= run screen ================= */
+function renderRun(){
+  const host=document.getElementById("runHost");
+  const R=88, C=2*Math.PI*R;
+  const brk=S.live.kind==="break";
+  host.innerHTML='<div class="run'+(brk?" brk":"")+'">'+
+    '<p class="task">'+(brk?"Break":esc(S.live.task))+"</p>"+
+    '<p class="course">'+(brk?"then back to "+esc(S.live.task):esc(S.live.course||""))+"</p>"+
+    '<div class="ring"><svg viewBox="0 0 190 190">'+
+      '<circle class="bg" cx="95" cy="95" r="'+R+'"/>'+
+      '<circle class="fg" id="ringFg" cx="95" cy="95" r="'+R+'" stroke-dasharray="'+C+'" stroke-dashoffset="0"/>'+
+      "</svg>"+
+      '<div class="mid"><p class="clock" id="clk">--:--</p></div></div>'+
+    '<p class="est">'+(brk?"Stand up. Water. Look at something far away."
+      :(S.live.est?"You guessed "+S.live.est+" min for this":""))+"</p>"+
+    '<p class="leaves" id="lv"></p>'+
+    '<div class="foot">'+
+      (S.cfg.sawGA?"":'<p class="ga">Triple-click the side button now to lock the phone to this screen. '+
+        "Settings &rsaquo; Accessibility &rsaquo; Guided Access turns it on.</p>")+
+      '<button class="hold" id="bail"><i></i><span>'+
+        (brk?"Hold to go back now":"Hold to end early")+"</span></button>"+
+    "</div></div>";
+  const fg=document.getElementById("ringFg"), clk=document.getElementById("clk"), lv=document.getElementById("lv");
+  const paint=()=>{
+    if(!S.live)return;
+    const left=S.live.start+S.live.dur-Date.now();
+    clk.textContent=clock(left);
+    clk.classList.toggle("low",left<=60000);
+    fg.setAttribute("stroke-dashoffset",String(C*(1-Math.max(0,Math.min(1,left/S.live.dur)))));
+    const n=S.live.leaves.length;
+    lv.textContent=n?("you left "+n+" time"+(n===1?"":"s")):"";
+    if(left<=0)finishSession("done","");
+  };
+  paint();
+  clearInterval(tick); tick=setInterval(paint,1000);
+  holdToConfirm(document.getElementById("bail"),
+    ()=>{ if(S.live&&S.live.kind==="break")finishSession("done",""); else askReason() });
+}
+/* a deliberate 1.6 s press, so quitting is never a reflex */
+function holdToConfirm(btn,go){
+  let t0=0,raf=0;
+  const fill=btn.querySelector("i");
+  const stop=()=>{cancelAnimationFrame(raf);fill.style.width="0%";t0=0};
+  const step=()=>{
+    const p=Math.min(1,(Date.now()-t0)/1600);
+    fill.style.width=(p*100)+"%";
+    if(p>=1){stop();go();return}
+    raf=requestAnimationFrame(step);
+  };
+  const down=e=>{e.preventDefault();t0=Date.now();raf=requestAnimationFrame(step)};
+  btn.addEventListener("pointerdown",down);
+  ["pointerup","pointercancel","pointerleave"].forEach(ev=>btn.addEventListener(ev,stop));
+}
+function askReason(){
+  openSheet("Ending early","<p class=\"s\">What pulled you off it? This is the only way the app learns "+
+    "what actually derails you.</p>"+
+    '<div class="card"><div class="chips" id="rs">'+
+      REASONS.map(r=>'<button data-r="'+r[0]+'">'+esc(r[1])+"</button>").join("")+"</div>"+
+      '<p class="note">Everything except &ldquo;finished early&rdquo; ends your streak of '+
+      streak()+".</p></div>"+
+    '<button class="btn ghost" id="keepGoing">Never mind, keep going</button>',
+    el=>{
+      el.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{closeSheet();finishSession("bail",b.dataset.r)});
+      el.querySelector("#keepGoing").onclick=closeSheet;
+    });
+}
+</script>
+<script>
+/* The break is over. This screen stays until it is answered, and if the phone
+   was away it says exactly how long the break really ran. */
+function renderResume(){
+  const p=S.pending; if(!p)return;
+  const host=document.getElementById("runHost");
+  const draw=()=>{
+    const o=Math.max(0,Math.round((Date.now()-p.endedAt)/60000));
+    host.innerHTML='<div class="run resume">'+
+      '<p class="task">Break is over</p>'+
+      '<p class="course">'+esc(p.task)+"</p>"+
+      '<p class="bigmsg">'+(o>0?o+" min past":"right on time")+"</p>"+
+      '<p class="est">'+(o>0
+        ? "Your "+p.brk+" minute break has run "+(p.brk+o)+" minutes."
+        : "That was "+p.brk+" minutes exactly.")+"</p>"+
+      '<div class="foot">'+
+        '<button class="btn" id="resume">Start '+p.dur+' more minutes</button>'+
+        '<button class="hold" id="quit"><i></i><span>Hold to stop for the day</span></button>'+
+      "</div></div>";
+    document.getElementById("resume").onclick=()=>{audioReady();closePending(true)};
+    holdToConfirm(document.getElementById("quit"),()=>closePending(false));
+  };
+  draw();
+  clearInterval(tick); tick=setInterval(draw,30000);
+}
+
+/* ================= sheets ================= */
+function fitSheet(){
+  const h=document.getElementById("sheetHost");
+  if(!h||!h.firstChild)return;
+  const vv=window.visualViewport;
+  let kb=0,vh=window.innerHeight;
+  if(vv){kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);vh=vv.height}
+  h.style.setProperty("--kb",Math.round(kb)+"px");
+  h.style.setProperty("--sheetmax",Math.round(vh*0.92)+"px");
+}
+if(window.visualViewport){visualViewport.addEventListener("resize",fitSheet);visualViewport.addEventListener("scroll",fitSheet)}
+window.addEventListener("resize",fitSheet);
+function openSheet(title,body,mount){
+  const h=document.getElementById("sheetHost");
+  h.innerHTML='<div class="scrim" id="scrim"></div><div class="sheet"><div class="grab"></div>'+
+    '<div class="in"><h3>'+esc(title)+"</h3>"+body+"</div></div>";
+  document.getElementById("scrim").onclick=closeSheet;
+  document.body.style.overflow="hidden";
+  fitSheet();
+  if(mount)mount(h);
+}
+function closeSheet(){document.getElementById("sheetHost").innerHTML="";document.body.style.overflow=""}
+
+/* ================= focus tab ================= */
+const DURS=[15,25,45,60,90];
+let draft={task:"",course:"",est:S.cfg.est,dur:S.cfg.dur};
+
+function focusHTML(){
+  const t=today();
+  const mine=works().filter(s=>dkey(new Date(s.at))===t);
+  const done=mine.filter(s=>!isLapse(s)).length;
+  const total=mine.reduce((a,s)=>a+s.actual,0);
+  const open=Object.values(S.tasks).filter(x=>!x.done&&x.sessions>0).slice(-4).reverse();
+  const st=streak();
+  return '<div class="head"><h1>What are you working on?</h1>'+
+      "<p>Name it, set the clock, then lock the phone to it.</p></div>"+
+    '<div class="card">'+
+      '<div class="field"><span class="lab">The assignment</span>'+
+        '<input id="fTask" type="text" value="'+esc(draft.task)+'" placeholder="Controls lab 2 write-up" '+
+        'autocomplete="off" autocapitalize="sentences"></div>'+
+      '<div class="field"><span class="lab">Course (optional)</span>'+
+        '<input id="fCourse" type="text" value="'+esc(draft.course)+'" placeholder="EEL 4657C" autocomplete="off"></div>'+
+      '<div class="field"><span class="lab">How long do you think the work needs?</span>'+
+        '<div class="chips" id="estChips">'+
+          [10,20,30,45,60,90].map(m=>'<button data-est="'+m+'" aria-pressed="'+(draft.est===m)+'">'+m+" min</button>").join("")+
+        "</div></div>"+
+      '<div class="field"><span class="lab">How long is this session?</span>'+
+        '<div class="chips" id="durChips">'+
+          DURS.map(m=>'<button data-dur="'+m+'" aria-pressed="'+(draft.dur===m)+'">'+m+" min</button>").join("")+
+        "</div></div>"+
+      '<button class="btn" id="go">Start the clock</button>'+
+      '<p class="note">The screen stays awake and shows only this. Triple-click the side button to lock '+
+        "the phone to it &mdash; then nothing else on the phone is reachable until the clock runs out.</p>"+
+    "</div>"+
+    (open.length?'<div class="sectlab">Pick up where you left off</div><div class="card">'+
+      open.map(x=>'<button class="row" style="width:100%;text-align:left" data-open="'+esc(x.name)+'">'+
+        '<div class="main"><div class="nm">'+esc(x.name)+"</div>"+
+        '<div class="sub">'+x.spent+" min so far"+(x.est?" &middot; guessed "+x.est:"")+"</div></div>"+
+        '<div class="rt"><div class="mins">&rsaquo;</div></div></button>').join("")+"</div>":"")+
+    '<div class="big" style="margin-top:14px">'+
+      '<div class="stat"><div class="v">'+total+'</div><div class="k">minutes focused today</div></div>'+
+      '<div class="stat"><div class="v">'+st+'</div><div class="k">session streak'+
+        (st===0&&S.sessions.length?" — broken":"")+"</div></div>"+
+    "</div>"+
+    (done?'<p class="note">'+done+" session"+(done===1?"":"s")+" finished today.</p>":"");
+}
+function bindFocus(el){
+  const task=el.querySelector("#fTask"), course=el.querySelector("#fCourse");
+  task.oninput=()=>draft.task=task.value;
+  course.oninput=()=>draft.course=course.value;
+  el.querySelectorAll("[data-est]").forEach(b=>b.onclick=()=>{draft.est=+b.dataset.est;
+    S.cfg.est=draft.est;saveC();render()});
+  el.querySelectorAll("[data-dur]").forEach(b=>b.onclick=()=>{draft.dur=+b.dataset.dur;
+    S.cfg.dur=draft.dur;saveC();render()});
+  el.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{
+    const t=S.tasks[keyOf(b.dataset.open)];
+    draft.task=t.name;draft.course=t.course||"";if(t.est)draft.est=t.est;
+    render();window.scrollTo(0,0);
+  });
+  el.querySelector("#go").onclick=()=>{
+    const name=task.value.trim();
+    if(!name){toast("Name the assignment first");task.focus();return}
+    S.cfg.sawGA=true;saveC();
+    startSession(name,course.value.trim(),draft.dur,draft.est);
+    draft.task="";draft.course="";
+  };
+}
+
+/* ================= log tab ================= */
+function logHTML(){
+  if(!S.sessions.length)return '<div class="head"><h1>Log</h1></div>'+
+    '<div class="empty">No sessions yet.<br>Every one you run shows up here, finished or not.</div>';
+  const days={};
+  S.sessions.slice().reverse().forEach(s=>{(days[dkey(new Date(s.at))]=days[dkey(new Date(s.at))]||[]).push(s)});
+  let h='<div class="head"><h1>Log</h1><p>'+S.sessions.length+" sessions, "+
+    S.sessions.reduce((a,s)=>a+s.actual,0)+" minutes.</p></div>";
+  for(const d of Object.keys(days)){
+    const list=days[d], dt=new Date(d+"T12:00:00");
+    const lab=d===today()?"Today":dt.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+    h+='<div class="daylab">'+esc(lab)+" &middot; "+list.reduce((a,s)=>a+s.actual,0)+" min</div><div class=\"card\">";
+    h+=list.map(s=>'<div class="row"><div class="main"><div class="nm">'+esc(s.task)+
+        '<span class="pill '+(s.kind==="break"?"brk":isLapse(s)?"bail":"done")+'">'+
+        (s.kind==="break"?"break":isLapse(s)?"ended early":"done")+"</span></div>"+
+        '<div class="sub">'+new Date(s.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+
+        (s.course?" &middot; "+esc(s.course):"")+
+        (isLapse(s)?" &middot; "+esc(REASON_LABEL(s.reason)):"")+
+        (s.leaves?" &middot; left "+s.leaves+"x":"")+"</div></div>"+
+        '<div class="rt"><div class="mins">'+s.actual+"</div>"+
+        '<div class="sub">of '+s.planned+"</div></div></div>").join("");
+    h+="</div>";
+  }
+  return h+'<button class="btn ghost" id="wipe" style="margin-top:16px">Clear the log</button>';
+}
+function bindLog(el){
+  const w=el.querySelector("#wipe");
+  if(w)w.onclick=()=>openSheet("Clear the log","<p class=\"s\">Deletes every session and every "+
+    "assignment. There is no undo.</p><button class=\"btn warn\" id=\"yes\">Delete everything</button>",
+    e=>{e.querySelector("#yes").onclick=()=>{S.sessions=[];S.tasks={};saveS();saveT();
+      closeSheet();render();toast("Cleared")}});
+}
+</script>
+<script>
+/* ================= stats tab ================= */
+function statsHTML(){
+  if(!S.sessions.length)return '<div class="head"><h1>Stats</h1></div>'+
+    '<div class="empty">Nothing to show yet.<br>Run a few sessions and this fills in.</div>';
+  const m=multiplier();
+  const lapses=works().filter(isLapse);
+  const byReason={};
+  lapses.forEach(s=>byReason[s.reason]=(byReason[s.reason]||0)+1);
+  const totalMin=works().reduce((a,s)=>a+s.actual,0);
+  const leaves=S.sessions.reduce((a,s)=>a+s.leaves,0);
+  const finished=Object.values(S.tasks).filter(t=>t.done&&t.est>0&&t.spent>0);
+
+  /* last 14 days */
+  const day=[],now=new Date();now.setHours(12,0,0,0);
+  for(let i=13;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);
+    const k=dkey(d);
+    day.push({k:k,lab:d.toLocaleDateString(undefined,{weekday:"narrow"}),
+      min:works().filter(s=>dkey(new Date(s.at))===k).reduce((a,s)=>a+s.actual,0)});}
+  const peak=Math.max(1,...day.map(d=>d.min));
+
+  let h='<div class="head"><h1>Stats</h1><p>'+totalMin+" minutes across "+works().length+" sessions.</p></div>";
+
+  h+='<div class="big">'+
+      '<div class="stat"><div class="v">'+streak()+'</div><div class="k">current streak</div></div>'+
+      '<div class="stat"><div class="v">'+bestStreak()+'</div><div class="k">best streak</div></div>'+
+    "</div>";
+
+  /* the number that answers "why does a 20 minute assignment take 2 hours" */
+  h+='<div class="card"><span class="lab">How long things really take</span>';
+  if(finished.length>=2){
+    h+='<div class="mult">'+m.toFixed(1)+'&times;</div>'+
+      '<p class="note" style="margin-top:6px">Across '+finished.length+" finished assignments you spent "+
+      finished.reduce((a,t)=>a+t.spent,0)+" minutes on work you guessed would take "+
+      finished.reduce((a,t)=>a+t.est,0)+" minutes."+
+      (m>1.6?" When you next think &ldquo;twenty minutes&rdquo;, book "+Math.round(20*m)+".":"")+"</p>"+
+      '<div class="bars" style="margin-top:12px">'+
+      finished.slice(-6).reverse().map(t=>{
+        const r=t.spent/t.est, w=Math.min(100,100/Math.max(r,1)), over=r>1.15;
+        return '<div class="bar"><div class="t">'+esc(t.name)+"</div>"+
+          '<div class="n">'+t.est+" &rarr; "+t.spent+"</div>"+
+          '<div class="tr"><i class="'+(over?"over":"")+'" style="width:'+
+          Math.min(100,(t.est/Math.max(t.spent,1))*100)+'%"></i></div></div>';
+      }).join("")+"</div>"+
+      '<p class="note">The bar is how much of the real time your estimate covered.</p>';
+  }else{
+    h+='<p class="note">Finish two assignments with an estimate on them and the ratio shows up here. '+
+      "That single number is the one worth knowing.</p>";
+  }
+  h+="</div>";
+
+  h+='<div class="card"><span class="lab">Last two weeks</span>'+
+    '<div class="spark">'+day.map(d=>'<i class="'+(d.min?"has":"")+'" style="height:'+
+      Math.max(2,d.min/peak*100)+'%" title="'+d.min+' min"></i>').join("")+"</div>"+
+    '<div class="sparkx">'+day.map(d=>"<span>"+d.lab+"</span>").join("")+"</div>"+
+    '<p class="note">Peak day '+peak+" min.</p></div>";
+
+  h+='<div class="card"><span class="lab">What derails you</span>';
+  if(lapses.length){
+    const top=Object.entries(byReason).sort((a,b)=>b[1]-a[1]);
+    h+='<div class="bars">'+top.map(([r,n])=>
+      '<div class="bar"><div class="t">'+esc(REASON_LABEL(r))+"</div>"+
+      '<div class="n">'+n+"</div>"+
+      '<div class="tr"><i style="width:'+(n/lapses.length*100)+'%"></i></div></div>').join("")+"</div>"+
+      '<p class="note">'+lapses.length+" session"+(lapses.length===1?"":"s")+" ended early out of "+
+      works().length+".</p>";
+  }else h+='<p class="note">You have not bailed on a session yet.</p>';
+  h+="</div>";
+
+  const bd=breakDrift();
+  if(bd)h+='<div class="card"><span class="lab">How long your breaks really run</span>'+
+    '<div class="mult">'+Math.round(bd.real)+'<span style="font-size:18px"> min</span></div>'+
+    '<p class="note" style="margin-top:6px">Across '+bd.n+" break"+(bd.n===1?"":"s")+" you asked for "+
+    Math.round(bd.planned/bd.n)+" minutes on average and took "+Math.round(bd.real)+"."+
+    (bd.over>0?" That is "+bd.over+" minutes of the day spent not deciding to go back."
+             :" You came back on time every time.")+"</p>"+
+    '<div class="bars" style="margin-top:10px">'+breaks().filter(x=>x.overrun!=null).slice(-6).reverse()
+      .map(x=>'<div class="bar"><div class="t">'+esc(x.task)+"</div>"+
+        '<div class="n">'+x.planned+" &rarr; "+(x.planned+x.overrun)+"</div>"+
+        '<div class="tr"><i class="'+(x.overrun>2?"over":"")+'" style="width:'+
+        Math.min(100,(x.planned/(x.planned+x.overrun))*100)+'%"></i></div></div>').join("")+
+    "</div></div>";
+
+  if(leaves)h+='<div class="card"><span class="lab">Times you left the app mid-session</span>'+
+    '<div class="mult">'+leaves+"</div>"+
+    '<p class="note" style="margin-top:6px">Counted whenever this screen lost focus while a clock was '+
+    "running. Guided Access makes this impossible &mdash; that is rather the point of it.</p></div>";
+
+  h+='<div class="sectlab">Laptop</div><div class="card">'+
+    '<div class="field"><span class="lab">Sync address</span>'+
+      '<input id="syncUrl" type="text" value="'+esc(S.cfg.sync||"")+'" placeholder="http://192.168.86.122:8777" '+
+      'autocomplete="off" autocapitalize="off" spellcheck="false"></div>'+
+    '<button class="btn ghost" id="syncNow">Send sessions to the laptop</button>'+
+    '<p class="note">Optional. Run <b>focus serve</b> on the laptop and put its address here; sessions '+
+    "upload whenever the phone can reach it. Everything works without this.</p></div>"+
+    '<button class="btn ghost" id="dl" style="margin-top:10px">Download a backup</button>';
+  return h;
+}
+function bindStats(el){
+  const u=el.querySelector("#syncUrl");
+  if(u)u.onchange=()=>{S.cfg.sync=u.value.trim();saveC();toast("Saved")};
+  const b=el.querySelector("#syncNow");
+  if(b)b.onclick=async()=>{
+    if(!S.cfg.sync){toast("Put the laptop address in first");return}
+    const n=await syncUp();
+    toast(n==null?"Could not reach the laptop":n+" new session"+(n===1?"":"s")+" sent");
+  };
+  const d=el.querySelector("#dl");
+  if(d)d.onclick=()=>{
+    const blob=new Blob([JSON.stringify({sessions:S.sessions,tasks:S.tasks},null,1)],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);a.download="deep-work-"+today()+".json";a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  };
+}
+
+/* ================= router ================= */
+function render(){
+  ["focus","log","stats"].forEach(v=>
+    document.getElementById("nav"+v).setAttribute("aria-current",String(S.view===v)));
+  const el=document.getElementById("screen");
+  el.innerHTML=S.view==="focus"?focusHTML():S.view==="log"?logHTML():statsHTML();
+  if(S.view==="focus")bindFocus(el);
+  if(S.view==="log")bindLog(el);
+  if(S.view==="stats")bindStats(el);
+  document.getElementById("tabbar").hidden=false;
+}
+["focus","log","stats"].forEach(v=>
+  document.getElementById("nav"+v).onclick=()=>{S.view=v;window.scrollTo(0,0);render()});
+
+/* a session in progress survives a reload, a crash, or the phone locking */
+if(S.live){
+  if(Date.now()-S.live.start>=S.live.dur){
+    const l=S.live;
+    S.live=null;saveL();
+    const rec={id:l.id,kind:l.kind||"work",task:l.task,course:l.course,at:l.start,
+      planned:mins(l.dur),actual:mins(l.dur),est:l.est,ended:"done",reason:"",
+      leaves:l.leaves.length,awaySec:l.leaves.reduce((a,b)=>a+b,0)};
+    S.sessions.push(rec);
+    if(rec.kind!=="break"){const t=S.tasks[keyOf(l.task)];if(t){t.spent+=rec.actual;t.sessions++}}
+    saveS();saveT();
+    /* a break that ran out while you were away still has to be answered */
+    if(rec.kind==="break"){
+      S.pending={task:l.task,course:l.course,est:l.est,dur:S.cfg.dur,
+                 brk:rec.planned,endedAt:l.start+l.dur,recId:rec.id};
+      saveP();
+    }
+  }else{ keepAwake(true); renderRun(); }
+}
+render();
+if(!S.live&&S.pending)renderResume();
+if("serviceWorker" in navigator)
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+syncUp();
+</script>
