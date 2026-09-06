@@ -117,6 +117,14 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .run.resume .foot{position:static;margin-top:34px;width:100%;max-width:340px}
 .run.resume .btn{background:#8E9CDC;color:#12141A}
 .pill.brk{background:var(--sunk);color:var(--ink-3)}
+.pill{background:var(--sunk);color:var(--ink-3)}
+.urlbox{margin:0 0 10px;padding:10px 12px;background:var(--sunk);border-radius:9px;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.5;word-break:break-all;color:var(--ink-2)}
+input[type=time]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;
+  padding:11px 12px;outline:none;font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.run.gate .bigmsg{color:#7FC0A0}
+.row .link{font-size:12.5px;font-weight:600;color:var(--accent-ink)}
 .chips button[aria-pressed="false"]{opacity:.55}
 .run .leaves{font-size:12.5px;color:#E8A87C;margin:8px 0 0;min-height:18px}
 .run .foot{position:absolute;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom));
@@ -169,7 +177,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 /* ---- tabbar ---- */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--surface);
   border-top:1px solid var(--line);padding:7px 12px calc(7px + env(safe-area-inset-bottom))}
-.tabbar>div{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.tabbar>div{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
 .tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;
   border-radius:10px;font-size:10.5px;font-weight:600;color:var(--ink-3)}
 .tabbar svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;
@@ -199,6 +207,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 <div id="screen"></div>
 <nav class="tabbar" id="tabbar"><div>
   <button id="navfocus"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Focus</button>
+  <button id="navplan"><svg viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>Plan</button>
   <button id="navlog"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Log</button>
   <button id="navstats"><svg viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Stats</button>
 </div></nav>
@@ -207,7 +216,8 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 <div id="toastHost"></div>
 <script>
 /* ================= state ================= */
-const LSK={sessions:"fx.sessions",tasks:"fx.tasks",cfg:"fx.cfg",live:"fx.live",pending:"fx.pending"};
+const LSK={sessions:"fx.sessions",tasks:"fx.tasks",cfg:"fx.cfg",live:"fx.live",pending:"fx.pending",
+           blocks:"fx.blocks",checks:"fx.checks"};
 const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
@@ -218,13 +228,17 @@ const S={
   tasks:lsGet(LSK.tasks,{}),            /* name -> {est,spent,sessions,done} */
   cfg:Object.assign({dur:45,est:20,brk:5,sawGA:false,sync:""},lsGet(LSK.cfg,{})),
   live:lsGet(LSK.live,null),            /* a session in progress, survives a reload */
-  pending:lsGet(LSK.pending,null)       /* a finished break waiting to be answered */
+  pending:lsGet(LSK.pending,null),      /* a finished break waiting to be answered */
+  blocks:lsGet(LSK.blocks,[]),          /* where the day is supposed to happen */
+  checks:lsGet(LSK.checks,[])           /* every arrival and departure, with distance */
 };
 const saveS=()=>lsSet(LSK.sessions,S.sessions);
 const saveT=()=>lsSet(LSK.tasks,S.tasks);
 const saveC=()=>lsSet(LSK.cfg,S.cfg);
 const saveL=()=>{S.live?lsSet(LSK.live,S.live):localStorage.removeItem(LSK.live)};
 const saveP=()=>{S.pending?lsSet(LSK.pending,S.pending):localStorage.removeItem(LSK.pending)};
+const saveBlocks=()=>lsSet(LSK.blocks,S.blocks);
+const saveChecks=()=>lsSet(LSK.checks,S.checks);
 
 /* ================= util ================= */
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -774,18 +788,310 @@ function bindStats(el){
   };
 }
 
+/* ================= schedule + place check-ins =================
+   iOS gives a web app no background location, so nothing here polls. A block is
+   checked at exactly two moments: when you arrive and when you leave, each fired
+   by an iOS Shortcuts personal automation that opens this app with ?block=..&e=..
+   The app then takes one foreground fix and holds you to it. */
+const KINDS=[["study","Study"],["class","Class"],["meal","Meal"],["gym","Gym"],["other","Other"]];
+const DAYS=["Su","Mo","Tu","We","Th","Fr","Sa"];
+const kindName=k=>(KINDS.find(x=>x[0]===k)||[,"Other"])[1];
+
+function haversine(a,b,c,d){                       /* metres between two fixes */
+  const R=6371000, r=Math.PI/180;
+  const dLat=(c-a)*r, dLon=(d-b)*r;
+  const s=Math.sin(dLat/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dLon/2)**2;
+  return Math.round(2*R*Math.asin(Math.sqrt(s)));
+}
+function fix(){                                    /* one reading, never a watch */
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation)return rej(new Error("no geolocation"));
+    navigator.geolocation.getCurrentPosition(
+      p=>res({lat:p.coords.latitude,lon:p.coords.longitude,acc:Math.round(p.coords.accuracy||0)}),
+      e=>rej(e), {enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+  });
+}
+const hhmm=t=>{const[h,m]=String(t||"0:00").split(":").map(Number);return h*60+m};
+const fmtTime=t=>{const[h,m]=String(t).split(":").map(Number);
+  const ap=h<12?"am":"pm", hh=h%12===0?12:h%12;
+  return hh+(m?":"+pad(m):"")+ap};
+/* minutes late against the block's start, for today */
+function lateness(b,when){
+  const d=new Date(when), mins=d.getHours()*60+d.getMinutes();
+  return mins-hhmm(b.start);
+}
+const blockById=id=>S.blocks.find(b=>b.id===id);
+const checksFor=id=>S.checks.filter(c=>c.blockId===id);
+
+/* attendance: one arrival per block per day counts */
+function attendance(b){
+  const arrivals=checksFor(b.id).filter(c=>c.evt==="arrive");
+  const days=new Set(arrivals.filter(c=>c.ok).map(c=>dkey(new Date(c.at))));
+  const tried=new Set(arrivals.map(c=>dkey(new Date(c.at))));
+  const late=arrivals.filter(c=>c.ok&&c.late>0);
+  return {made:days.size,tried:tried.size,
+          avgLate:late.length?Math.round(late.reduce((a,c)=>a+c.late,0)/late.length):0,
+          misses:arrivals.filter(c=>!c.ok).length};
+}
+
+/* ---- the check itself ---- */
+async function runCheck(blockId,evt){
+  const b=blockById(blockId);
+  if(!b){toast("That block is gone");return}
+  if(!b.place){toast("Set the place for "+b.name+" first");S.view="plan";render();return}
+  showChecking(b,evt);
+  let f=null,err=null;
+  try{ f=await fix() }catch(e){ err=e }
+  const rec={id:uid(),blockId:b.id,at:Date.now(),evt:evt,
+             lat:f?f.lat:null,lon:f?f.lon:null,acc:f?f.acc:null,
+             dist:null,ok:false,late:0,denied:!f};
+  if(f){
+    rec.dist=haversine(f.lat,f.lon,b.place.lat,b.place.lon);
+    rec.ok=rec.dist<=(b.radius||120)+ (f.acc||0)/2;
+    rec.late=evt==="arrive"?lateness(b,rec.at):0;
+  }
+  S.checks.push(rec); saveChecks(); syncUp();
+  document.getElementById("runHost").innerHTML="";
+  if(!f){
+    toast(err&&err.code===1?"Location permission denied":"Could not get a fix");
+    S.view="plan"; render(); return;
+  }
+  if(evt==="depart"){
+    if(S.live){ finishSession("bail","interrupt"); }
+    toast(rec.ok?"Left "+b.place.label:"Marked as gone from "+b.place.label);
+    S.view="plan"; render(); return;
+  }
+  if(!rec.ok){
+    toast("Not at "+b.place.label+" — "+rec.dist+" m away. Logged as a miss.");
+    S.view="plan"; render(); return;
+  }
+  if(b.kind==="study"){ renderGate(b,rec); return; }
+  toast("Checked in at "+b.place.label+(rec.late>0?", "+rec.late+" min late":", on time"));
+  S.view="plan"; render();
+}
+function showChecking(b,evt){
+  document.getElementById("runHost").innerHTML='<div class="run resume">'+
+    '<p class="task">'+esc(b.name)+"</p>"+
+    '<p class="course">'+(evt==="arrive"?"checking you are there":"checking you have left")+"</p>"+
+    '<p class="bigmsg">&middot;&middot;&middot;</p>'+
+    '<p class="est">Reading your location once. It is not tracked between checks.</p></div>';
+}
+
+/* You are at the library. This is the screen that will not let you just sit there. */
+function renderGate(b,rec){
+  const host=document.getElementById("runHost");
+  const draw=()=>{
+    const sinceMin=Math.round((Date.now()-rec.at)/60000);
+    host.innerHTML='<div class="run resume gate">'+
+      '<p class="task">You are at '+esc(b.place.label)+"</p>"+
+      '<p class="course">'+esc(b.name)+" &middot; "+fmtTime(b.start)+"</p>"+
+      '<p class="bigmsg">'+(rec.late>0?rec.late+" min late":"on time")+"</p>"+
+      '<p class="est">Pick something and start the clock.'+
+        (sinceMin>=2?" You have been standing here "+sinceMin+" min.":"")+"</p>"+
+      '<div class="foot">'+
+        '<button class="btn" id="gateGo">Choose an assignment</button>'+
+        '<button class="hold" id="gateSkip"><i></i><span>Hold to skip this block</span></button>'+
+      "</div></div>";
+    document.getElementById("gateGo").onclick=()=>{
+      clearInterval(tick);tick=null;host.innerHTML="";
+      if(b.task)draft.task=b.task;
+      if(b.dur)draft.dur=b.dur;
+      S.view="focus";render();
+      const t=document.getElementById("fTask"); if(t&&!t.value)t.focus();
+      toast("Name it and start");
+    };
+    holdToConfirm(document.getElementById("gateSkip"),()=>{
+      rec.skipped=true; saveChecks();
+      clearInterval(tick);tick=null;host.innerHTML="";
+      S.view="plan";render();toast("Skipped. That is on the record.");
+    });
+  };
+  draw();
+  clearInterval(tick); tick=setInterval(draw,60000);
+}
+
+/* ---- the plan tab ---- */
+function planHTML(){
+  const now=new Date(), dow=now.getDay(), mins=now.getHours()*60+now.getMinutes();
+  const todays=S.blocks.filter(b=>b.days.includes(dow)).sort((a,b)=>hhmm(a.start)-hhmm(b.start));
+  let h='<div class="head"><h1>Where you should be</h1>'+
+    "<p>Checked when you arrive and when you leave. Nothing in between.</p></div>";
+  if(!S.blocks.length)
+    h+='<div class="empty">No blocks yet.<br>Add the places your day is supposed to happen in.</div>';
+  else{
+    h+='<div class="sectlab">Today</div>';
+    if(!todays.length)h+='<div class="card"><p class="note" style="margin:0">Nothing scheduled today.</p></div>';
+    else h+='<div class="card">'+todays.map(b=>{
+      const a=attendance(b), on=mins>=hhmm(b.start)&&mins<hhmm(b.end);
+      const doneToday=checksFor(b.id).some(c=>c.evt==="arrive"&&c.ok&&dkey(new Date(c.at))===today());
+      return '<div class="row"><div class="main"><div class="nm">'+esc(b.name)+
+        '<span class="pill '+(doneToday?"done":on?"brk":"")+'">'+
+          (doneToday?"checked in":on?"now":kindName(b.kind).toLowerCase())+"</span></div>"+
+        '<div class="sub">'+fmtTime(b.start)+"&ndash;"+fmtTime(b.end)+
+          (b.place?" &middot; "+esc(b.place.label):" &middot; no place set")+"</div></div>"+
+        '<div class="rt"><button class="link" data-check="'+b.id+'">I am here</button></div></div>';
+    }).join("")+"</div>";
+
+    h+='<div class="sectlab">All blocks<button class="link" id="addBlock">+ Add</button></div><div class="card">'+
+      S.blocks.slice().sort((a,b)=>hhmm(a.start)-hhmm(b.start)).map(b=>{
+        const a=attendance(b);
+        return '<button class="row" style="width:100%;text-align:left" data-edit="'+b.id+'">'+
+        '<div class="main"><div class="nm">'+esc(b.name)+"</div>"+
+        '<div class="sub">'+b.days.map(d=>DAYS[d]).join(" ")+" &middot; "+fmtTime(b.start)+
+          (a.tried?" &middot; made "+a.made+" of "+a.tried+(a.avgLate?", avg "+a.avgLate+" min late":""):"")+
+          "</div></div><div class=\"rt\"><div class=\"mins\">&rsaquo;</div></div></button>";
+      }).join("")+"</div>";
+  }
+  h+='<button class="btn'+(S.blocks.length?" ghost":"")+'" id="addBlock2" style="margin-top:12px">Add a block</button>'+
+     '<button class="btn ghost" id="howto" style="margin-top:9px">How the automatic check works</button>';
+  return h;
+}
+
+function bindPlan(el){
+  el.querySelectorAll("[data-check]").forEach(b=>b.onclick=()=>runCheck(b.dataset.check,"arrive"));
+  el.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openBlock(blockById(b.dataset.edit)));
+  ["addBlock","addBlock2"].forEach(id=>{const n=el.querySelector("#"+id);if(n)n.onclick=()=>openBlock(null)});
+  const hw=el.querySelector("#howto"); if(hw)hw.onclick=howto;
+}
+
+function openBlock(b){
+  const isNew=!b;
+  b=b||{id:uid(),name:"",kind:"study",days:[1,2,3,4,5],start:"09:00",end:"11:00",
+        place:null,radius:120,task:"",dur:S.cfg.dur};
+  const body=
+    '<div class="card">'+
+      '<div class="field"><span class="lab">What is it</span>'+
+        '<input id="bName" type="text" value="'+esc(b.name)+'" placeholder="Morning at the library"></div>'+
+      '<div class="field"><span class="lab">Kind</span><div class="chips" id="bKind">'+
+        KINDS.map(k=>'<button data-k="'+k[0]+'" aria-pressed="'+(b.kind===k[0])+'">'+k[1]+"</button>").join("")+
+      "</div></div>"+
+      '<div class="field"><span class="lab">Days</span><div class="chips" id="bDays">'+
+        DAYS.map((d,i)=>'<button data-d="'+i+'" aria-pressed="'+(b.days.includes(i))+'">'+d+"</button>").join("")+
+      "</div></div>"+
+      '<div class="grid2">'+
+        '<div class="field"><span class="lab">Start</span><input id="bStart" type="time" value="'+esc(b.start)+'"></div>'+
+        '<div class="field"><span class="lab">End</span><input id="bEnd" type="time" value="'+esc(b.end)+'"></div>'+
+      "</div>"+
+    "</div>"+
+    '<div class="card"><span class="lab">Place</span>'+
+      '<p class="note" id="placeNow" style="margin:0 0 10px">'+
+        (b.place?esc(b.place.label)+" &middot; "+b.place.lat.toFixed(5)+", "+b.place.lon.toFixed(5)
+               :"Not set. Stand where the block happens and tap below.")+"</p>"+
+      '<div class="field"><input id="bLabel" type="text" value="'+esc(b.place?b.place.label:"")+
+        '" placeholder="Library West, 3rd floor"></div>'+
+      '<button class="btn ghost" id="grab">Use my location now</button>'+
+      '<div class="field" style="margin-top:12px"><span class="lab">How close counts (metres)</span>'+
+        '<input id="bRadius" type="number" inputmode="numeric" value="'+(b.radius||120)+'"></div>'+
+      '<p class="note">GPS indoors is good to maybe 20&ndash;50 m, so keep this generous. 120 m is a '+
+      "sensible default for a building.</p></div>"+
+    (b.kind==="study"?'<div class="card"><span class="lab">When you arrive, start on</span>'+
+      '<div class="field"><input id="bTask" type="text" value="'+esc(b.task||"")+
+      '" placeholder="Leave blank to choose each time"></div></div>':"")+
+    '<button class="btn" id="bSave">'+(isNew?"Add this block":"Save")+"</button>"+
+    (isNew?"":'<button class="btn warn" id="bDel" style="margin-top:9px">Delete this block</button>')+
+    (isNew?"":'<button class="btn ghost" id="bShort" style="margin-top:9px">Shortcut links for this block</button>');
+
+  openSheet(isNew?"New block":"Edit block",body,el=>{
+    let kind=b.kind, days=b.days.slice(), place=b.place;
+    el.querySelectorAll("[data-k]").forEach(x=>x.onclick=()=>{
+      kind=x.dataset.k;
+      el.querySelectorAll("[data-k]").forEach(y=>y.setAttribute("aria-pressed",String(y===x)));
+    });
+    el.querySelectorAll("[data-d]").forEach(x=>x.onclick=()=>{
+      const i=+x.dataset.d, at=days.indexOf(i);
+      if(at>=0)days.splice(at,1); else days.push(i);
+      x.setAttribute("aria-pressed",String(days.includes(i)));
+    });
+    el.querySelector("#grab").onclick=async()=>{
+      const p=el.querySelector("#placeNow"); p.textContent="Getting a fix…";
+      try{
+        const f=await fix();
+        place={lat:f.lat,lon:f.lon,label:el.querySelector("#bLabel").value.trim()||"Here"};
+        p.textContent=place.label+" · "+f.lat.toFixed(5)+", "+f.lon.toFixed(5)+" (±"+f.acc+" m)";
+      }catch(e){ p.textContent=e&&e.code===1?"Permission denied — allow location for this site."
+                                            :"Could not get a fix. Try outside a lift." }
+    };
+    el.querySelector("#bSave").onclick=()=>{
+      const name=el.querySelector("#bName").value.trim();
+      if(!name){toast("Give the block a name");return}
+      if(!days.length){toast("Pick at least one day");return}
+      const lbl=el.querySelector("#bLabel").value.trim();
+      if(place&&lbl)place.label=lbl;
+      const rec={id:b.id,name:name,kind:kind,days:days.sort(),
+        start:el.querySelector("#bStart").value||"09:00",
+        end:el.querySelector("#bEnd").value||"11:00",
+        place:place,radius:Math.max(25,+el.querySelector("#bRadius").value||120),
+        task:(el.querySelector("#bTask")||{value:""}).value.trim(),dur:b.dur||S.cfg.dur};
+      const i=S.blocks.findIndex(x=>x.id===rec.id);
+      if(i>=0)S.blocks[i]=rec; else S.blocks.push(rec);
+      saveBlocks(); closeSheet(); S.view="plan"; render(); toast(isNew?"Block added":"Saved");
+    };
+    const del=el.querySelector("#bDel");
+    if(del)del.onclick=()=>{
+      S.blocks=S.blocks.filter(x=>x.id!==b.id);
+      S.checks=S.checks.filter(c=>c.blockId!==b.id);
+      saveBlocks(); saveChecks(); closeSheet(); render(); toast("Deleted");
+    };
+    const sh=el.querySelector("#bShort");
+    if(sh)sh.onclick=()=>shortcutSheet(b);
+  });
+}
+
+const appURL=()=>location.origin+location.pathname.replace(/[^/]*$/,"");
+function shortcutSheet(b){
+  const base=appURL();
+  const arrive=base+"?block="+b.id+"&e=arrive";
+  const depart=base+"?block="+b.id+"&e=depart";
+  openSheet("Shortcut links",
+    '<p class="s">Two personal automations in the iPhone Shortcuts app. Both use '+
+    "<b>Open URL</b> as their only action, and both need <b>Run Immediately</b> turned on.</p>"+
+    '<div class="card"><span class="lab">When I arrive</span>'+
+      '<p class="urlbox" id="u1">'+esc(arrive)+"</p>"+
+      '<button class="btn ghost" data-copy="'+esc(arrive)+'">Copy this link</button></div>'+
+    '<div class="card"><span class="lab">When I leave</span>'+
+      '<p class="urlbox" id="u2">'+esc(depart)+"</p>"+
+      '<button class="btn ghost" data-copy="'+esc(depart)+'">Copy this link</button></div>'+
+    '<p class="note">Shortcuts &rsaquo; Automation &rsaquo; + &rsaquo; Arrive &rsaquo; pick '+
+    esc(b.place?b.place.label:"the place")+" &rsaquo; Next &rsaquo; New Blank Automation &rsaquo; "+
+    "Open URL &rsaquo; paste. Then the same again with Leave.</p>",
+    el=>el.querySelectorAll("[data-copy]").forEach(x=>x.onclick=async()=>{
+      try{ await navigator.clipboard.writeText(x.dataset.copy); toast("Copied") }
+      catch(e){ toast("Select the link above and copy it") }
+    }));
+}
+function howto(){
+  openSheet("How the checking works",
+    '<p class="s">Your phone will not let a web app watch your location in the background — only '+
+    "while it is open and in front of you. So this never runs in the background, and never tracks "+
+    "you between checks.</p>"+
+    '<div class="card"><span class="lab">What actually happens</span><p class="note" style="margin:0">'+
+    "An iPhone automation opens this app the moment you arrive somewhere, or leave it. The app takes "+
+    "one location reading, compares it to the block's place, and writes down whether you were there "+
+    "and how late. If it is a study block and you really are there, you get a screen that will not "+
+    "go away until you either start a session or hold down to record a skip.</p></div>"+
+    '<div class="card"><span class="lab">What it cannot catch</span><p class="note" style="margin:0">'+
+    "Leaving early is only caught if you have the leave automation set up, and sitting in the "+
+    "building doing nothing is not caught at all. It catches skipping and lateness, which is the "+
+    "part you said you actually lose.</p></div>"+
+    '<div class="card"><span class="lab">Set it up once</span><p class="note" style="margin:0">'+
+    "Open a block, tap <b>Shortcut links for this block</b>, and follow the three lines there. "+
+    "You need one arrive automation and one leave automation per place, not per block.</p></div>");
+}
+
 /* ================= router ================= */
+const VIEWS=["focus","plan","log","stats"];
 function render(){
-  ["focus","log","stats"].forEach(v=>
-    document.getElementById("nav"+v).setAttribute("aria-current",String(S.view===v)));
+  VIEWS.forEach(v=>document.getElementById("nav"+v).setAttribute("aria-current",String(S.view===v)));
   const el=document.getElementById("screen");
-  el.innerHTML=S.view==="focus"?focusHTML():S.view==="log"?logHTML():statsHTML();
+  el.innerHTML=S.view==="focus"?focusHTML():S.view==="plan"?planHTML():
+               S.view==="log"?logHTML():statsHTML();
   if(S.view==="focus")bindFocus(el);
+  if(S.view==="plan")bindPlan(el);
   if(S.view==="log")bindLog(el);
   if(S.view==="stats")bindStats(el);
   document.getElementById("tabbar").hidden=false;
 }
-["focus","log","stats"].forEach(v=>
+VIEWS.forEach(v=>
   document.getElementById("nav"+v).onclick=()=>{S.view=v;window.scrollTo(0,0);render()});
 
 /* a session in progress survives a reload, a crash, or the phone locking */
@@ -809,6 +1115,16 @@ if(S.live){
 }
 render();
 if(!S.live&&S.pending)renderResume();
+
+/* Shortcuts opens us as .../?block=<id>&e=arrive|depart */
+(function(){
+  const q=new URLSearchParams(location.search);
+  const id=q.get("block"), e=q.get("e");
+  if(!id)return;
+  history.replaceState(null,"",location.pathname);        /* do not re-fire on reload */
+  if(S.live&&e!=="depart"){toast("Already in a session");return}
+  runCheck(id,e==="depart"?"depart":"arrive");
+})();
 if("serviceWorker" in navigator)
   window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 syncUp();

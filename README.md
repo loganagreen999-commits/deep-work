@@ -88,6 +88,36 @@ hold to stop for the day. If the phone was in your pocket when the break ran
 out, the overrun is measured from when it *should* have ended, so Stats can tell
 you the true length of your five minute breaks.
 
+## The Plan tab: being where you said you would be
+
+iOS gives a web app **no background location** — only a reading taken while the
+app is open in front of you. So nothing here polls, and nothing is tracked
+between checks. A block is checked at exactly two moments, and an iPhone
+automation supplies both.
+
+Add a block (name, kind, days, start and end, and a place captured by standing
+there and tapping **Use my location now**), then open it and tap **Shortcut
+links for this block**. You get two URLs. In the Shortcuts app:
+
+    Automation › + › Arrive › pick the place › Next
+      › New Blank Automation › Open URL › paste the arrive link
+      › turn on Run Immediately
+
+    ...and again with Leave, using the depart link.
+
+From then on, walking into the library opens the app, it takes one fix, and:
+
+- **You are there, and it is a study block** → a screen you cannot dismiss. Start
+  a session, or hold the button down to record a skip. That is the accountability.
+- **You are not there** → logged as a miss, with how far away you actually were.
+- **You leave** → logged, and any running session is closed.
+
+Each block then carries its own record: made 5 of 9, average 34 minutes late.
+
+It catches skipping and lateness. It does not catch sitting in the building
+doing nothing, and it only catches leaving early if you set up the leave
+automation. That is the honest boundary of what the phone will allow.
+
 ## youtube-blinders/
 
 An unpacked Chrome extension that leaves YouTube with a search bar and a player.
@@ -98,3 +128,11 @@ no reload.
 
 Install: `chrome://extensions` › Developer mode › **Load unpacked** ›
 pick `youtube-blinders/`.
+
+### Installing the extension the easy way
+
+    ~/focus/install-extension.sh
+
+It copies the folder to your Windows Desktop and opens Chrome's extensions page.
+Then: **Developer mode** on (top right) › **Load unpacked** › pick the
+`youtube-blinders` folder on the Desktop › done.
