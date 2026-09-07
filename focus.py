@@ -200,8 +200,31 @@ def cmd_serve(a):
         def do_GET(self):
             if self.path.startswith("/api/sessions"):
                 return self._json(200, {"sessions": load(SESSIONS, [])})
+            if self.path.startswith("/api/live"):
+                live = load(LIVE, None)
+                if not live: return self._json(200, {"running": False})
+                return self._json(200, {"running": True, "task": live["task"],
+                                        "left": max(0, int(live["start"] + live["dur"] - now()))})
             return super().do_GET()
         def do_POST(self):
+            if self.path.startswith("/api/live"):
+                n = int(self.headers.get("Content-Length") or 0)
+                try: body = json.loads(self.rfile.read(n) or b"{}")
+                except Exception: return self._json(400, {"error": "bad json"})
+                act = str(body.get("action") or "start").lower()
+                if act == "stop":
+                    finish("bail", "interrupt") if load(LIVE, None) else release_block()
+                    return self._json(200, {"ok": True, "blocking": False})
+                mins = int(body.get("minutes") or 45)
+                task = str(body.get("task") or "Focus")[:80]
+                if load(LIVE, None):
+                    return self._json(200, {"ok": True, "already": True})
+                blocked = arm_block(mins * 60 + 5)
+                save(LIVE, {"id": uuid.uuid4().hex[:10], "task": task, "course": "",
+                            "start": now(), "dur": mins * 60, "est": 0, "blocked": blocked})
+                print("  phone started: %s, %d min%s" % (task, mins,
+                      " (blocking)" if blocked else " (no block)"))
+                return self._json(200, {"ok": True, "blocking": blocked, "minutes": mins})
             if not self.path.startswith("/api/sessions"): return self._json(404, {"error": "no"})
             n = int(self.headers.get("Content-Length") or 0)
             if n > 4_000_000: return self._json(413, {"error": "too big"})
@@ -221,8 +244,20 @@ def cmd_serve(a):
     finally: s.close()
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", a.port), H) as srv:
-        print("app      http://%s:%d/" % (ip, a.port))
-        print("sync url http://%s:%d   <- paste into the phone's Stats tab" % (ip, a.port))
+        base = "http://%s:%d" % (ip, a.port)
+        print("app        %s/" % base)
+        print("start url  %s/api/live" % base)
+        print()
+        print("One-tap start from the phone, since an https page cannot call a plain-http")
+        print("LAN address but Shortcuts can. In the Shortcuts app, new shortcut:")
+        print("  1  Get Contents of URL   %s/api/live" % base)
+        print("       Method POST, Request Body JSON:")
+        print('       action  text  start')
+        print('       minutes number 45')
+        print('       task    text  Ask Each Time')
+        print("  2  Open URLs             https://loganagreen999-commits.github.io/deep-work/")
+        print("  Name it Focus, add it to your home screen, and one tap arms both.")
+        print()
         print("Ctrl-C to stop.")
         try: srv.serve_forever()
         except KeyboardInterrupt: print()

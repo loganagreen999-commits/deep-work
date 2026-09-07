@@ -90,6 +90,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .btn.warn{background:var(--warn-soft);color:var(--warn)}
 .btn[disabled]{opacity:.45}
 .note{font-size:12px;color:var(--ink-3);line-height:1.6;margin:9px 3px 0}
+.note.warnnote{color:var(--warn)}
 
 /* ---- the run screen: dark, still, nothing to poke at ---- */
 .run{position:fixed;inset:0;z-index:60;background:#0B0C0A;color:#F0EFE9;
@@ -293,9 +294,22 @@ function multiplier(){
 }
 
 /* ================= sync (optional, laptop on the same wifi) ================= */
+/* An https page may not call a plain-http LAN address -- browsers block it as
+   mixed content, and localhost is the only exemption. So this only does
+   anything when the app itself was opened from the laptop. Say so rather than
+   failing silently, and use the Shortcut route for the real thing. */
+function syncBlocked(url){
+  const base=(url!==undefined?url:(S.cfg.sync||""));
+  if(!base)return "";
+  if(location.protocol!=="https:")return "";
+  if(!/^http:/i.test(base))return "";
+  if(/\/\/(localhost|127\.0\.0\.1)([:/]|$)/i.test(base))return "";
+  return "This page is on https, so the browser will not let it call a plain http address. "+
+         "Use the Shortcut that focus serve prints instead.";
+}
 async function syncUp(){
   const base=(S.cfg.sync||"").replace(/\/+$/,"");
-  if(!base)return;
+  if(!base||syncBlocked())return;
   try{
     const r=await fetch(base+"/api/sessions",{method:"POST",
       headers:{"Content-Type":"application/json"},
@@ -765,8 +779,10 @@ function statsHTML(){
       '<input id="syncUrl" type="text" value="'+esc(S.cfg.sync||"")+'" placeholder="http://192.168.86.122:8777" '+
       'autocomplete="off" autocapitalize="off" spellcheck="false"></div>'+
     '<button class="btn ghost" id="syncNow">Send sessions to the laptop</button>'+
-    '<p class="note">Optional. Run <b>focus serve</b> on the laptop and put its address here; sessions '+
-    "upload whenever the phone can reach it. Everything works without this.</p></div>"+
+    (syncBlocked()?'<p class="note warnnote">'+esc(syncBlocked())+"</p>"
+      :'<p class="note">Optional. Run <b>focus serve</b> on the laptop and put its address here.</p>')+
+    '<p class="note">To start <b>both</b> halves with one tap, run <b>focus serve</b> and follow the '+
+    "Shortcut it prints: Shortcuts can call your laptop directly, which this page cannot.</p></div>"+
     '<button class="btn ghost" id="dl" style="margin-top:10px">Download a backup</button>';
   return h;
 }
@@ -776,6 +792,7 @@ function bindStats(el){
   const b=el.querySelector("#syncNow");
   if(b)b.onclick=async()=>{
     if(!S.cfg.sync){toast("Put the laptop address in first");return}
+    if(syncBlocked()){toast("Blocked as mixed content — use the Shortcut");return}
     const n=await syncUp();
     toast(n==null?"Could not reach the laptop":n+" new session"+(n===1?"":"s")+" sent");
   };

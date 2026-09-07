@@ -47,6 +47,30 @@ added for you.
 If the laptop is killed mid-session the helper still restores the hosts file on
 its own deadline, so you cannot be left permanently blocked.
 
+## Starting both halves with one tap
+
+An https page may not call a plain-http address on your own network — browsers
+block it as mixed content, and `localhost` is the only exemption. So the app
+cannot start the laptop's block by itself, and the sync field only works when
+the app was opened from the laptop. It says so now rather than failing quietly.
+
+**Shortcuts is not a browser and is not bound by that rule.** Run `focus serve`
+and it prints the exact recipe, with your laptop's address filled in:
+
+    1  Get Contents of URL   http://<laptop>:8777/api/live
+         Method POST, Request Body JSON:
+           action   text    start
+           minutes  number  45
+           task     text    Ask Each Time
+    2  Open URLs             https://loganagreen999-commits.github.io/deep-work/
+
+Name it Focus and put it on your home screen. One tap asks what you are working
+on, arms the site block on the laptop, and opens the timer ready to start. Then
+triple-click for Guided Access as usual.
+
+`POST /api/live` with `{"action":"stop"}` ends it early and unblocks; `GET
+/api/live` reports what is running and how long is left.
+
 ## Sharing one log
 
 Both halves write the same session shape. Run `focus serve` on the laptop, paste
